@@ -6,7 +6,7 @@ export function getHtmlContent(dot?:string){
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Call Graph</title>
-        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://d3js.org/d3.v5.js"></script>
         <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
         <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
     </head>
@@ -24,9 +24,18 @@ export function getHtmlContent(dot?:string){
             const dot='${dot}'
             vscode.setState(dot)
             const res =await (await fetch(dot)).text()
-            d3.select('#app').graphviz().renderDot(res)
-
-
+            d3.select('#app').graphviz().renderDot(res,function(){
+                var nodes = d3.selectAll(".node");
+                nodes.attr('cursor', 'pointer')
+                nodes.on('click',(el)=>{
+                    e = d3.event
+                    console.log(el,e)
+                    vscode.postMessage({
+                        command: 'open',
+                        uri:el.key
+                    })
+                })
+            })
 
             d3.select('#downloadSvg').on('click',()=>{
                 const serializer = new XMLSerializer()

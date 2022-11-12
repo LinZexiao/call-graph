@@ -9,6 +9,7 @@ import { getHtmlContent } from './html'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as pm from 'picomatch'
+import { Console } from 'console'
 
 export const output = vscode.window.createOutputChannel('CallGraph')
 
@@ -142,6 +143,12 @@ export function activate(context: vscode.ExtensionContext) {
                     } else existed(f.fsPath)
                     break
             }
+        } else if (msg.command === 'open') {
+            console.log(vscode.Uri.parse(msg.uri))
+            vscode.commands.executeCommand(
+                'vscode.open',
+                vscode.Uri.parse(msg.uri)
+            )
         }
     }
     const incomingDisposable = vscode.commands.registerCommand(
