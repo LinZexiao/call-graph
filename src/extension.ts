@@ -4,7 +4,7 @@ import {
     getIncomingCallNode,
     getOutgoingCallNode
 } from './call'
-import { generateDot } from './dot'
+import {  generateDotStr, generateNode ,find } from './dot'
 import { getHtmlContent } from './html'
 import * as path from 'path'
 import * as fs from 'fs'
@@ -63,7 +63,9 @@ const generateGraph = (
             return pm(patterns)(item.uri.fsPath)
         })
 
-        generateDot(graph, dotFile.fsPath)
+        const node = generateNode(graph)
+        const dotStr = generateDotStr(node)
+        fs.writeFileSync(dotFile.fsPath, dotStr)
 
         const webviewType = `CallGraph.preview${type}`
         const panel = vscode.window.createWebviewPanel(
@@ -75,6 +77,7 @@ const generateGraph = (
                 enableScripts: true
             }
         )
+
         const dotFileUri = panel.webview.asWebviewUri(dotFile).toString()
         panel.webview.html = getHtmlContent(dotFileUri)
         panel.webview.onDidReceiveMessage(onReceiveMsg)
@@ -144,11 +147,17 @@ export function activate(context: vscode.ExtensionContext) {
                     break
             }
         } else if (msg.command === 'open') {
-            console.log(vscode.Uri.parse(msg.uri))
-            vscode.commands.executeCommand(
-                'vscode.open',
-                vscode.Uri.parse(msg.uri)
-            )
+            const uri = vscode.Uri.parse(msg.uri) 
+            console.log(msg, uri)
+            let fragment = uri.fragment
+            let cols = fragment.split("@")[1].split(":")
+            let line = parseInt(cols[0])
+            let col = parseInt(cols[1])
+            vscode.window.showTextDocument(uri, {selection: new vscode.Range(line, col, line, col)})
+            // vscode.commands.executeCommand(
+            //     'vscode.open',
+            //     uri,
+            // )
         }
     }
     const incomingDisposable = vscode.commands.registerCommand(

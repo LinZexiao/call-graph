@@ -1,20 +1,69 @@
 import { CallHierarchyNode } from "./call"
+import { CallHierarchyItem } from 'vscode'
+import {v4 as uuidv4} from 'uuid';
 import * as fs from 'fs'
 import * as vscode from 'vscode'
 import { isDeepStrictEqual } from "util"
 import * as path from "path"
 import { output } from "./extension"
 
+export function generateNode(graph: CallHierarchyNode): Node {
+    const root = vscode.workspace.workspaceFolders?.[0].uri.toString()??''
+    const getNode = (n: CallHierarchyNode) => {
+        return {
+            name: `"${n.item.uri}#${n.item.name}@${n.item.range.start.line}:${n.item.range.start.character}:${n.item.range.end.line}:${n.item.range.end.character}"`,
+            attr: { label: n.item.name , id : uuidv4()  },
+            subgraph: { name: n.item.uri.toString(), attr: { label: n.item.uri.toString().replace(root,'${workspace}') ,id : uuidv4() }  },
+            next: [] ,
+            inNode : n.item
+        } as Node
+    }
+    const node = getNode(graph)
+    // node.attr!.color = "green"
+    // node.attr!.style = "filled"
+    const set = new Set<Node>()
+
+    const insertNode = (n: Node, c: CallHierarchyNode) => {
+        set.add(n)
+        for (const child of c.children) {
+            const next = getNode(child)
+
+            let isSkip = false
+            for (const s of set) {
+                if (isEqual(s, next)) {
+                    n.next.push(s)
+                    isSkip = true
+                }
+            }
+            if (isSkip) continue
+
+            n.next.push(next)
+
+            insertNode(next, child)
+        }
+    }
+    insertNode(node, graph)
+    return node
+}
+
+export function generateDotStr(node: Node)  {
+    const dot = new Graph()
+    dot.addAttr({ rankdir: "LR" ,id:uuidv4()})
+    dot.addNode(node)
+    return dot.toString()
+}
+
 export function generateDot(graph: CallHierarchyNode,path:string) {
     const dot = new Graph()
     const root = vscode.workspace.workspaceFolders?.[0].uri.toString()??''
-    dot.addAttr({ rankdir: "LR" })
+    dot.addAttr({ rankdir: "LR" ,id:uuidv4()})
     const getNode = (n: CallHierarchyNode) => {
         return {
             name: `"${n.item.uri}#${n.item.name}@${n.item.range.start.line}:${n.item.range.start.character}"`,
-            attr: { label: n.item.name },
-            subgraph: { name: n.item.uri.toString(), attr: { label: n.item.uri.toString().replace(root,'${workspace}') } },
-            next: []
+            attr: { label: n.item.name , id : uuidv4() ,range: JSON.stringify(n.item.range) },
+            subgraph: { name: n.item.uri.toString(), attr: { label: n.item.uri.toString().replace(root,'${workspace}') ,id : uuidv4()} },
+            next: [],
+            inNode : n.item
         } as Node
     }
     const node = getNode(graph)
@@ -49,13 +98,14 @@ function isEqual(a: Node, b: Node) {
     return a.name === b.name && isDeepStrictEqual(a.attr, b.attr) && isDeepStrictEqual(a.subgraph, b.subgraph)
 }
 
-type Attr = Record<string, string> & { title?: string, label?: string, shape?: string, style?: string, color?: string }
+type Attr = Record<string, string> & { id:string , title?: string, label?: string, shape?: string, style?: string, color?: string , range?:string}
 
 interface Node {
     name: string
     attr?: Attr,
     subgraph?: Subgraph
     next: Node[]
+    inNode : CallHierarchyItem
 }
 interface Subgraph {
     name: string
@@ -118,4 +168,14 @@ class Graph {
         })
         return this._dot + sub + '}\n'
     }
+}
+
+
+export function find(node: Node, match:  ( n: Node ) => boolean) : Node | undefined {
+    if (match(node)) return node
+    for (const child of node.next) {
+        const n = find(child, match)
+        if (n) return n
+    }
+    return undefined
 }

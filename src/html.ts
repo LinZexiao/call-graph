@@ -32,7 +32,7 @@ export function getHtmlContent(dot?:string){
                     console.log(el,e)
                     vscode.postMessage({
                         command: 'open',
-                        uri:el.key
+                        uri: el.key,
                     })
                 })
             })

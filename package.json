@@ -1,9 +1,9 @@
 {
-    "name": "call-graph",
-    "displayName": "Call Graph",
-    "description": "call graph for vscode",
-    "version": "1.1.2",
-    "publisher": "LuoZhihao",
+    "name": "call-navigator",
+    "displayName": "Call Navigator",
+    "description": "call Navigator for vscode",
+    "version": "0.0.1",
+    "publisher": "mint",
     "engines": {
         "vscode": "^1.65.0"
     },
@@ -67,6 +67,7 @@
         "@types/mocha": "^9.1.0",
         "@types/node": "14.x",
         "@types/picomatch": "^2.3.0",
+        "@types/uuid": "^8.3.4",
         "@types/vscode": "^1.65.0",
         "@typescript-eslint/eslint-plugin": "^5.16.0",
         "@typescript-eslint/parser": "^5.16.0",
@@ -92,6 +93,7 @@
         "dot"
     ],
     "dependencies": {
-        "picomatch": "^2.3.1"
+        "picomatch": "^2.3.1",
+        "uuid": "^9.0.0"
     }
 }
