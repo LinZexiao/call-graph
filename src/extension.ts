@@ -147,17 +147,15 @@ export function activate(context: vscode.ExtensionContext) {
                     break
             }
         } else if (msg.command === 'open') {
-            const uri = vscode.Uri.parse(msg.uri) 
-            console.log(msg, uri)
+            const root = vscode.workspace.workspaceFolders?.[0].uri.path ?? ''
+            const uri = vscode.Uri.parse(msg.uri)
             let fragment = uri.fragment
             let cols = fragment.split("@")[1].split(":")
             let line = parseInt(cols[0])
             let col = parseInt(cols[1])
-            vscode.window.showTextDocument(uri, {selection: new vscode.Range(line, col, line, col)})
-            // vscode.commands.executeCommand(
-            //     'vscode.open',
-            //     uri,
-            // )
+            vscode.workspace.openTextDocument(vscode.Uri.file(uri.path)).then(doc => {
+                vscode.window.showTextDocument(doc, { selection: new vscode.Range(line, col, line, col) })
+            })
         }
     }
     const incomingDisposable = vscode.commands.registerCommand(

@@ -8,12 +8,12 @@ import * as path from "path"
 import { output } from "./extension"
 
 export function generateNode(graph: CallHierarchyNode): Node {
-    const root = vscode.workspace.workspaceFolders?.[0].uri.toString()??''
+    const root = vscode.workspace.workspaceFolders?.[0].uri.path??''
     const getNode = (n: CallHierarchyNode) => {
         return {
-            name: `"${n.item.uri}#${n.item.name}@${n.item.range.start.line}:${n.item.range.start.character}:${n.item.range.end.line}:${n.item.range.end.character}"`,
+            name: `"${n.item.uri.path}#${n.item.name}@${n.item.range.start.line}:${n.item.range.start.character}:${n.item.range.end.line}:${n.item.range.end.character}"`,
             attr: { label: n.item.name , id : uuidv4()  },
-            subgraph: { name: n.item.uri.toString(), attr: { label: n.item.uri.toString().replace(root,'${workspace}') ,id : uuidv4() }  },
+            subgraph: { name: n.item.uri.toString(), attr: { label: n.item.uri.path.replace(root,'${workspace}') ,id : uuidv4() }  },
             next: [] ,
             inNode : n.item
         } as Node
